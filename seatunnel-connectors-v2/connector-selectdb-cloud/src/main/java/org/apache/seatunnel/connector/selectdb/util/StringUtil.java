@@ -22,7 +22,7 @@ public final class StringUtil {
         if (str != null && str.length() != 0) {
             int len = str.length();
 
-            for(int i = 0; i < len; ++i) {
+            for (int i = 0; i < len; ++i) {
                 if (!Character.isWhitespace(str.charAt(i))) {
                     return false;
                 }

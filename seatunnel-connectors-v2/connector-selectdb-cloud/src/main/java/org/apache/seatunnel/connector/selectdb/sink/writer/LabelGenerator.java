@@ -30,6 +30,6 @@ public class LabelGenerator {
     }
 
     public String generateLabel(long chkId, int fileNum) {
-        return enable2PC ? labelPrefix + "_" + chkId + "_" + fileNum: labelPrefix + "_" + System.currentTimeMillis();
+        return enable2PC ? labelPrefix + "_" + chkId + "_" + fileNum : labelPrefix + "_" + System.currentTimeMillis();
     }
 }

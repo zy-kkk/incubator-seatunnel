@@ -43,7 +43,7 @@ public class RecordStream extends InputStream {
         recordBuffer.startBufferData();
     }
 
-    public void endInput() throws IOException{
+    public void endInput() throws IOException {
         recordBuffer.stopBufferData();
     }
 

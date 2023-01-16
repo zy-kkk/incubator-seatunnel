@@ -17,13 +17,15 @@
 
 package org.apache.seatunnel.connector.selectdb.sink.writer;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * hold state for SelectDBWriter.
  */
-public class SelectDBWriterState {
+public class SelectDBWriterState implements Serializable {
     String labelPrefix;
+
     public SelectDBWriterState(String labelPrefix) {
         this.labelPrefix = labelPrefix;
     }

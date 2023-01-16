@@ -34,7 +34,7 @@ public class BaseResponse<T> {
         return msg;
     }
 
-    public T getData(){
+    public T getData() {
         return data;
     }
 }

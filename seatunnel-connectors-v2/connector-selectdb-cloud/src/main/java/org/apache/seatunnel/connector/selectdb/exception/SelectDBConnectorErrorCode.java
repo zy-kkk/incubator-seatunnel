@@ -20,7 +20,9 @@ package org.apache.seatunnel.connector.selectdb.exception;
 import org.apache.seatunnel.common.exception.SeaTunnelErrorCode;
 
 public enum SelectDBConnectorErrorCode implements SeaTunnelErrorCode {
-    WRITE_RECORDS_FAILED("SelectDB-01", "Writing records to Doris failed.");
+    UPLOAD_FAILED("SelectDB-01", "upload failed "),
+
+    COMMIT_FAILED("SelectDB-02", "commit error with ");
 
     private final String code;
     private final String description;

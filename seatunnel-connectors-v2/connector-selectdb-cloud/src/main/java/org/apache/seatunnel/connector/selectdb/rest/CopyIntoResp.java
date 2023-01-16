@@ -22,11 +22,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CopyIntoResp extends BaseResponse{
+public class CopyIntoResp extends BaseResponse {
     private String code;
     private String exception;
 
-    private Map<String,String> result;
+    private Map<String, String> result;
 
     public String getDataCode() {
         return code;

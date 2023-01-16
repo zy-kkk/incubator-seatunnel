@@ -37,10 +37,10 @@ public class ResponseUtil {
     public static final String RETRY_COMMIT = "submit task failed, queue size is full: SQL submitter with block policy";
 
     public static boolean isCommitted(String msg) {
-       return COMMITTED_PATTERN.matcher(msg).matches();
+        return COMMITTED_PATTERN.matcher(msg).matches();
     }
 
-    public static boolean needRetryCommit(String msg){
+    public static boolean needRetryCommit(String msg) {
         return RETRY_COMMIT.equals(msg);
     }
 }

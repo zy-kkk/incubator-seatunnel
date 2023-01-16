@@ -17,9 +17,10 @@
 
 package org.apache.seatunnel.connector.selectdb.sink.committer;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class SelectDBCommittable {
+public class SelectDBCommittable implements Serializable {
     private final String hostPort;
     private final String clusterName;
     private final String copySQL;

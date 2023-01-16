@@ -32,6 +32,7 @@ public class HttpPutBuilder {
     String url;
     Map<String, String> header;
     HttpEntity httpEntity;
+
     public HttpPutBuilder() {
         header = new HashMap<>();
     }
@@ -41,7 +42,7 @@ public class HttpPutBuilder {
         return this;
     }
 
-    public HttpPutBuilder addFileName(String fileName){
+    public HttpPutBuilder addFileName(String fileName) {
         header.put("fileName", fileName);
         return this;
     }

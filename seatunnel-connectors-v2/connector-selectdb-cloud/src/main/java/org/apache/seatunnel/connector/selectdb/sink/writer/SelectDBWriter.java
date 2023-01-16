@@ -28,20 +28,25 @@ import org.apache.seatunnel.connector.selectdb.exception.SelectDBConnectorExcept
 import org.apache.seatunnel.connector.selectdb.serialize.SelectDBCsvSerializer;
 import org.apache.seatunnel.connector.selectdb.serialize.SelectDBJsonSerializer;
 import org.apache.seatunnel.connector.selectdb.serialize.SelectDBSerializer;
-import org.apache.seatunnel.connector.selectdb.sink.HttpUtil;
+import org.apache.seatunnel.connector.selectdb.util.HttpUtil;
 import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommittable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Collections;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
+
 import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.*;
 
 
@@ -84,7 +89,7 @@ public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitta
         this.lineDelimiter = selectdbConfig.getStreamLoadProps().getProperty(LINE_DELIMITER_KEY, LINE_DELIMITER_DEFAULT).getBytes();
         this.labelGenerator = new LabelGenerator(labelPrefix, selectdbConfig.getEnable2PC());
         this.scheduledExecutorService = new ScheduledThreadPoolExecutor(1, new ThreadFactoryBuilder().setNameFormat("file-load-check-" + context.getIndexOfSubtask()).build());
-        this.serializer = createSerializer(selectdbConfig,seaTunnelRowType);
+        this.serializer = createSerializer(selectdbConfig, seaTunnelRowType);
         this.intervalTime = selectdbConfig.getCheckInterval();
         this.loading = false;
         this.fileNum = new AtomicInteger();
@@ -94,10 +99,8 @@ public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitta
         this.selectdbCopyInto = new SelectDBCopyInto(selectdbConfig,
                 labelGenerator, new HttpUtil().getHttpClient());
         currentCheckpointId = lastCheckpointId + 1;
-        //selectdbCopyInto.startLoad(labelGenerator.generateLabel(lastCheckpointId + 1, fileNum.get()));
-        //this.loading = true;
-        // After the Http idle connection exceeds 1 minute, it will be closed by S3, so files need to be uploaded regularly
         scheduledExecutorService.scheduleWithFixedDelay(this::checkDone, 1000, intervalTime, TimeUnit.MILLISECONDS);
+        serializer.open();
     }
 
     @Override

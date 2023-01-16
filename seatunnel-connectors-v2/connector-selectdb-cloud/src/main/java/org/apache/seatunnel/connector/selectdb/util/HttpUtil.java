@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.seatunnel.connector.selectdb.sink;
+package org.apache.seatunnel.connector.selectdb.util;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -28,13 +28,6 @@ public class HttpUtil {
     private final HttpClientBuilder httpClientBuilder = HttpClients
             .custom()
             .disableRedirectHandling();
-    // Auto redirection has problems on cloud
-//            .setRedirectStrategy(new DefaultRedirectStrategy() {
-//                @Override
-//                protected boolean isRedirectable(String method) {
-//                    return true;
-//                }
-//            });
 
     public CloseableHttpClient getHttpClient() {
         return httpClientBuilder.build();

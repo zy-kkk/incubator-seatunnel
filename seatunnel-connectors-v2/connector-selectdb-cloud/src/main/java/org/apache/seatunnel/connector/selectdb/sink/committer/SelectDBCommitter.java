@@ -25,10 +25,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.seatunnel.api.sink.SinkCommitter;
 import org.apache.seatunnel.connector.selectdb.config.SelectDBConfig;
-import org.apache.seatunnel.connector.selectdb.exception.CopyIntoException;
+import org.apache.seatunnel.connector.selectdb.exception.SelectDBConnectorErrorCode;
+import org.apache.seatunnel.connector.selectdb.exception.SelectDBConnectorException;
 import org.apache.seatunnel.connector.selectdb.rest.BaseResponse;
 import org.apache.seatunnel.connector.selectdb.rest.CopyIntoResp;
-import org.apache.seatunnel.connector.selectdb.sink.HttpUtil;
+import org.apache.seatunnel.connector.selectdb.util.HttpUtil;
 import org.apache.seatunnel.connector.selectdb.util.HttpPostBuilder;
 import org.apache.seatunnel.connector.selectdb.util.ResponseUtil;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
@@ -119,7 +120,7 @@ public class SelectDBCommitter implements SinkCommitter<SelectDBCommittable> {
 
         if (!success) {
             LOG.error("commit error with status {}, reason {}, response {}", statusCode, reasonPhrase, loadResult);
-            throw new CopyIntoException("commit error with " + committable.getCopySQL());
+            throw new SelectDBConnectorException(SelectDBConnectorErrorCode.COMMIT_FAILED, committable.getCopySQL());
         }
     }
 

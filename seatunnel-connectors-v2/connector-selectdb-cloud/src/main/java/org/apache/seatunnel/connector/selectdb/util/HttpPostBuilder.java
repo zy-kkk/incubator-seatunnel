@@ -22,6 +22,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.HttpPost;
 import com.google.common.base.Preconditions;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ public class HttpPostBuilder {
     String url;
     Map<String, String> header;
     HttpEntity httpEntity;
+
     public HttpPostBuilder() {
         header = new HashMap<>();
     }

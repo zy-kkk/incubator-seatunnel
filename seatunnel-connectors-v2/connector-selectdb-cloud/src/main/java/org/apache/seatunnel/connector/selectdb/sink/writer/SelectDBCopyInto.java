@@ -29,9 +29,10 @@ import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.apache.seatunnel.connector.selectdb.config.SelectDBConfig;
-import org.apache.seatunnel.connector.selectdb.exception.SelectDBRuntimeException;
+import org.apache.seatunnel.connector.selectdb.exception.SelectDBConnectorErrorCode;
+import org.apache.seatunnel.connector.selectdb.exception.SelectDBConnectorException;
 import org.apache.seatunnel.connector.selectdb.rest.BaseResponse;
-import org.apache.seatunnel.connector.selectdb.sink.HttpUtil;
+import org.apache.seatunnel.connector.selectdb.util.HttpUtil;
 import org.apache.seatunnel.connector.selectdb.util.HttpPutBuilder;
 import org.apache.seatunnel.connector.selectdb.util.StringUtil;
 import org.slf4j.Logger;
@@ -39,15 +40,18 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.*;
-import java.util.concurrent.*;
-
-import org.apache.seatunnel.shade.com.typesafe.config.Config;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Properties;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.LINE_DELIMITER_DEFAULT;
 import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.LINE_DELIMITER_KEY;
-import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.*;
-import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.parseCopyIntoProperties;
 
 public class SelectDBCopyInto implements Serializable {
     private static final Logger LOG = LoggerFactory.getLogger(SelectDBCopyInto.class);
@@ -173,7 +177,7 @@ public class SelectDBCopyInto implements Serializable {
             LOG.info("upload file {} finished", fileName);
             fileList.add(fileName);
         } catch (Exception e) {
-            throw new SelectDBRuntimeException(e);
+            throw new SelectDBConnectorException(SelectDBConnectorErrorCode.UPLOAD_FAILED, e);
         }
     }
 

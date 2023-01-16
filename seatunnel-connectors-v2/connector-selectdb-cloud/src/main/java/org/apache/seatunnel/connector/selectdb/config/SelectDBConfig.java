@@ -38,17 +38,17 @@ public class SelectDBConfig {
     public static final Option<String> LOAD_URL = Options
             .key("load-url").stringType()
             .noDefaultValue()
-            .withDescription("selectdb load http address.");
+            .withDescription("SelectDB load http address.");
     public static final Option<String> JDBC_URL = Options
             .key("jdbc-url")
             .stringType()
             .noDefaultValue()
-            .withDescription("selectdb jdbc query address.");
+            .withDescription("SelectDB jdbc query address.");
     public static final Option<String> CLUSTER_NAME = Options
             .key("cluster-name")
             .stringType()
             .noDefaultValue()
-            .withDescription("selectdb cluster name.");
+            .withDescription("SelectDB cluster name.");
 
     public static final Option<String> TABLE_IDENTIFIER = Options
             .key("table.identifier")
@@ -101,7 +101,7 @@ public class SelectDBConfig {
     public static final Option<Boolean> SINK_ENABLE_DELETE = Options
             .key("sink.enable-delete")
             .booleanType()
-            .defaultValue(true)
+            .defaultValue(false)
             .withDescription("whether to enable the delete function");
 
     // Prefix for SelectDB CopyInto specific properties.

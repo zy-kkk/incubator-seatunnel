@@ -34,14 +34,16 @@ import org.apache.seatunnel.common.config.CheckResult;
 import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.connector.selectdb.exception.SelectDBConnectorException;
 import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommittable;
-import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommittableSerializer;
 import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommitter;
-import org.apache.seatunnel.connector.selectdb.sink.writer.DorisWriterStateSerializer;
 import org.apache.seatunnel.connector.selectdb.sink.writer.SelectDBWriter;
 import org.apache.seatunnel.connector.selectdb.sink.writer.SelectDBWriterState;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
-import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.*;
+import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.JDBC_URL;
+import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.LOAD_URL;
+import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.CLUSTER_NAME;
+import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.USERNAME;
+import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.TABLE_IDENTIFIER;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -62,7 +64,7 @@ public class SelectDBSink implements SeaTunnelSink<SeaTunnelRow, SelectDBWriterS
     @Override
     public void prepare(Config pluginConfig) throws PrepareFailException {
         this.pluginConfig = pluginConfig;
-        CheckResult result = CheckConfigUtil.checkAllExists(pluginConfig, JDBC_URL.key(), LOAD_URL.key(), CLUSTER_NAME.key(), USERNAME.key());
+        CheckResult result = CheckConfigUtil.checkAllExists(pluginConfig, JDBC_URL.key(), LOAD_URL.key(), CLUSTER_NAME.key(), USERNAME.key(), TABLE_IDENTIFIER.key());
         if (!result.isSuccess()) {
             throw new SelectDBConnectorException(SeaTunnelAPIErrorCode.CONFIG_VALIDATION_FAILED,
                     String.format("PluginName: %s, PluginType: %s, Message: %s",
@@ -97,7 +99,7 @@ public class SelectDBSink implements SeaTunnelSink<SeaTunnelRow, SelectDBWriterS
 
     @Override
     public Optional<Serializer<SelectDBWriterState>> getWriterStateSerializer() {
-        return Optional.of(new DorisWriterStateSerializer());
+        return Optional.of(new DefaultSerializer<>());
     }
 
     @Override
@@ -108,7 +110,7 @@ public class SelectDBSink implements SeaTunnelSink<SeaTunnelRow, SelectDBWriterS
 
     @Override
     public Optional<Serializer<SelectDBCommittable>> getCommitInfoSerializer() {
-        return Optional.of(new SelectDBCommittableSerializer());
+        return Optional.of(new DefaultSerializer<>());
     }
 
     @Override
