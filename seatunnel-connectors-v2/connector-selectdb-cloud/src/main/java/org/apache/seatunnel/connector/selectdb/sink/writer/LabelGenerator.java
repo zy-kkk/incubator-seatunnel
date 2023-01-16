@@ -21,8 +21,8 @@ package org.apache.seatunnel.connector.selectdb.sink.writer;
  * Generator label for stream load.
  */
 public class LabelGenerator {
-    private String labelPrefix;
-    private boolean enable2PC;
+    private final String labelPrefix;
+    private final boolean enable2PC;
 
     public LabelGenerator(String labelPrefix, boolean enable2PC) {
         this.labelPrefix = labelPrefix;

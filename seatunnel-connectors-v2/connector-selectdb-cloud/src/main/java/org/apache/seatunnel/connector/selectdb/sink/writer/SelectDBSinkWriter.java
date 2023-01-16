@@ -29,7 +29,7 @@ import org.apache.seatunnel.connector.selectdb.serialize.SelectDBCsvSerializer;
 import org.apache.seatunnel.connector.selectdb.serialize.SelectDBJsonSerializer;
 import org.apache.seatunnel.connector.selectdb.serialize.SelectDBSerializer;
 import org.apache.seatunnel.connector.selectdb.util.HttpUtil;
-import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommittable;
+import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommitInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,12 +47,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
-import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.*;
+import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.FORMAT_KEY;
+import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.FIELD_DELIMITER_KEY;
+import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.LINE_DELIMITER_KEY;
+import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadConstants.LINE_DELIMITER_DEFAULT;
 
+public class SelectDBSinkWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitInfo, SelectDBSinkState> {
 
-public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommittable, SelectDBWriterState> {
-
-    private static final Logger LOG = LoggerFactory.getLogger(SelectDBWriter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SelectDBSinkWriter.class);
     private final SelectDBConfig selectdbConfig;
     private final long lastCheckpointId;
     private volatile long currentCheckpointId;
@@ -62,29 +64,29 @@ public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitta
     private final byte[] lineDelimiter;
     private final LabelGenerator labelGenerator;
     private final int intervalTime;
-    private final SelectDBWriterState selectdbWriterState;
+    private final SelectDBSinkState selectdbSinkState;
     private final SelectDBSerializer serializer;
     private final transient ScheduledExecutorService scheduledExecutorService;
     private transient volatile Exception loadException = null;
-    private AtomicInteger fileNum;
+    private final AtomicInteger fileNum;
 
-    private ArrayList<byte[]> cache = new ArrayList<>();
+    private final ArrayList<byte[]> cache = new ArrayList<>();
     private int cacheSize = 0;
     private int cacheCnt = 0;
 
-    private static long MAX_CACHE_SIZE = 1024 * 1024L;
+    private static final long MAX_CACHE_SIZE = 1024 * 1024L;
 
 
-    public SelectDBWriter(SinkWriter.Context context,
-                          List<SelectDBWriterState> state,
-                          SeaTunnelRowType seaTunnelRowType,
-                          Config pluginConfig) {
+    public SelectDBSinkWriter(SinkWriter.Context context,
+                              List<SelectDBSinkState> state,
+                              SeaTunnelRowType seaTunnelRowType,
+                              Config pluginConfig) {
         this.selectdbConfig = SelectDBConfig.loadConfig(pluginConfig);
         this.lastCheckpointId = context.getIndexOfSubtask();
         LOG.info("restore checkpointId {}", lastCheckpointId);
         this.currentCheckpointId = lastCheckpointId;
         LOG.info("labelPrefix " + selectdbConfig.getLabelPrefix());
-        this.selectdbWriterState = new SelectDBWriterState(selectdbConfig.getLabelPrefix());
+        this.selectdbSinkState = new SelectDBSinkState(selectdbConfig.getLabelPrefix());
         this.labelPrefix = selectdbConfig.getLabelPrefix() + "_" + context.getIndexOfSubtask();
         this.lineDelimiter = selectdbConfig.getStreamLoadProps().getProperty(LINE_DELIMITER_KEY, LINE_DELIMITER_DEFAULT).getBytes();
         this.labelGenerator = new LabelGenerator(labelPrefix, selectdbConfig.getEnable2PC());
@@ -95,7 +97,7 @@ public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitta
         this.fileNum = new AtomicInteger();
     }
 
-    public void initializeLoad(List<SelectDBWriterState> state) throws IOException {
+    public void initializeLoad(List<SelectDBSinkState> state) throws IOException {
         this.selectdbCopyInto = new SelectDBCopyInto(selectdbConfig,
                 labelGenerator, new HttpUtil().getHttpClient());
         currentCheckpointId = lastCheckpointId + 1;
@@ -104,7 +106,7 @@ public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitta
     }
 
     @Override
-    public void write(SeaTunnelRow element) throws IOException {
+    public synchronized void write(SeaTunnelRow element) throws IOException {
         checkLoadException();
         byte[] serialize = serializer.serialize(element);
         if (Objects.isNull(serialize)) {
@@ -129,7 +131,7 @@ public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitta
     }
 
     @Override
-    public synchronized Optional<SelectDBCommittable> prepareCommit() throws IOException {
+    public synchronized Optional<SelectDBCommitInfo> prepareCommit() throws IOException {
         Preconditions.checkState(selectdbCopyInto != null);
         if (!loading) {
             //No data was written during the entire checkpoint period
@@ -140,18 +142,18 @@ public class SelectDBWriter implements SinkWriter<SeaTunnelRow, SelectDBCommitta
         stopLoad();
         CopySQLBuilder copySQLBuilder = new CopySQLBuilder(selectdbConfig, selectdbCopyInto.getFileList());
         String copySql = copySQLBuilder.buildCopySQL();
-        return Optional.of(new SelectDBCommittable(selectdbCopyInto.getHostPort(), selectdbConfig.getClusterName(), copySql));
+        return Optional.of(new SelectDBCommitInfo(selectdbCopyInto.getHostPort(), selectdbConfig.getClusterName(), copySql));
     }
 
     @Override
-    public synchronized List<SelectDBWriterState> snapshotState(long checkpointId) throws IOException {
+    public synchronized List<SelectDBSinkState> snapshotState(long checkpointId) throws IOException {
         Preconditions.checkState(selectdbCopyInto != null);
         this.currentCheckpointId = checkpointId + 1;
 
         LOG.info("clear the file list {}", selectdbCopyInto.getFileList());
         this.fileNum.set(0);
         this.selectdbCopyInto.clearFileList();
-        return Collections.singletonList(selectdbWriterState);
+        return Collections.singletonList(selectdbSinkState);
     }
 
     @Override

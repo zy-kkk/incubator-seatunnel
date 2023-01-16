@@ -23,10 +23,10 @@ import java.util.Objects;
 /**
  * hold state for SelectDBWriter.
  */
-public class SelectDBWriterState implements Serializable {
+public class SelectDBSinkState implements Serializable {
     String labelPrefix;
 
-    public SelectDBWriterState(String labelPrefix) {
+    public SelectDBSinkState(String labelPrefix) {
         this.labelPrefix = labelPrefix;
     }
 
@@ -42,7 +42,7 @@ public class SelectDBWriterState implements Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        SelectDBWriterState that = (SelectDBWriterState) o;
+        SelectDBSinkState that = (SelectDBSinkState) o;
         return Objects.equals(labelPrefix, that.labelPrefix);
     }
 

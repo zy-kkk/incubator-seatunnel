@@ -20,12 +20,12 @@ package org.apache.seatunnel.connector.selectdb.sink.committer;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class SelectDBCommittable implements Serializable {
+public class SelectDBCommitInfo implements Serializable {
     private final String hostPort;
     private final String clusterName;
     private final String copySQL;
 
-    public SelectDBCommittable(String hostPort, String clusterName, String copySQL) {
+    public SelectDBCommitInfo(String hostPort, String clusterName, String copySQL) {
         this.hostPort = hostPort;
         this.clusterName = clusterName;
         this.copySQL = copySQL;
@@ -51,7 +51,7 @@ public class SelectDBCommittable implements Serializable {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        SelectDBCommittable that = (SelectDBCommittable) o;
+        SelectDBCommitInfo that = (SelectDBCommitInfo) o;
         return hostPort.equals(that.hostPort) &&
                 clusterName.equals(that.clusterName) &&
                 copySQL.equals(that.copySQL);

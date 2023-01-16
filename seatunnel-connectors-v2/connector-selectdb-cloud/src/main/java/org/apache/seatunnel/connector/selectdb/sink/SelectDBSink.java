@@ -20,7 +20,6 @@ package org.apache.seatunnel.connector.selectdb.sink;
 import com.google.auto.service.AutoService;
 import org.apache.seatunnel.api.common.PrepareFailException;
 import org.apache.seatunnel.api.common.SeaTunnelAPIErrorCode;
-import org.apache.seatunnel.api.serialization.DefaultSerializer;
 import org.apache.seatunnel.api.serialization.Serializer;
 import org.apache.seatunnel.api.sink.SeaTunnelSink;
 import org.apache.seatunnel.api.sink.SinkAggregatedCommitter;
@@ -33,10 +32,12 @@ import org.apache.seatunnel.common.config.CheckConfigUtil;
 import org.apache.seatunnel.common.config.CheckResult;
 import org.apache.seatunnel.common.constants.PluginType;
 import org.apache.seatunnel.connector.selectdb.exception.SelectDBConnectorException;
-import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommittable;
+import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommitInfo;
+import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommitInfoSerializer;
 import org.apache.seatunnel.connector.selectdb.sink.committer.SelectDBCommitter;
-import org.apache.seatunnel.connector.selectdb.sink.writer.SelectDBWriter;
-import org.apache.seatunnel.connector.selectdb.sink.writer.SelectDBWriterState;
+import org.apache.seatunnel.connector.selectdb.sink.writer.SelectDBSinkStateSerializer;
+import org.apache.seatunnel.connector.selectdb.sink.writer.SelectDBSinkWriter;
+import org.apache.seatunnel.connector.selectdb.sink.writer.SelectDBSinkState;
 import org.apache.seatunnel.shade.com.typesafe.config.Config;
 
 import static org.apache.seatunnel.connector.selectdb.config.SelectDBConfig.JDBC_URL;
@@ -51,7 +52,7 @@ import java.util.List;
 import java.util.Optional;
 
 @AutoService(SeaTunnelSink.class)
-public class SelectDBSink implements SeaTunnelSink<SeaTunnelRow, SelectDBWriterState, SelectDBCommittable, SelectDBCommittable> {
+public class SelectDBSink implements SeaTunnelSink<SeaTunnelRow, SelectDBSinkState, SelectDBCommitInfo, SelectDBCommitInfo> {
     private Config pluginConfig;
     private SeaTunnelRowType seaTunnelRowType;
 
@@ -84,42 +85,42 @@ public class SelectDBSink implements SeaTunnelSink<SeaTunnelRow, SelectDBWriterS
 
 
     @Override
-    public SinkWriter<SeaTunnelRow, SelectDBCommittable, SelectDBWriterState> createWriter(SinkWriter.Context context) throws IOException {
-        SelectDBWriter dorisWriter = new SelectDBWriter(context, Collections.emptyList(), seaTunnelRowType, pluginConfig);
+    public SinkWriter<SeaTunnelRow, SelectDBCommitInfo, SelectDBSinkState> createWriter(SinkWriter.Context context) throws IOException {
+        SelectDBSinkWriter dorisWriter = new SelectDBSinkWriter(context, Collections.emptyList(), seaTunnelRowType, pluginConfig);
         dorisWriter.initializeLoad(Collections.emptyList());
         return dorisWriter;
     }
 
     @Override
-    public SinkWriter<SeaTunnelRow, SelectDBCommittable, SelectDBWriterState> restoreWriter(SinkWriter.Context context, List<SelectDBWriterState> states) throws IOException {
-        SelectDBWriter dorisWriter = new SelectDBWriter(context, states, seaTunnelRowType, pluginConfig);
+    public SinkWriter<SeaTunnelRow, SelectDBCommitInfo, SelectDBSinkState> restoreWriter(SinkWriter.Context context, List<SelectDBSinkState> states) throws IOException {
+        SelectDBSinkWriter dorisWriter = new SelectDBSinkWriter(context, states, seaTunnelRowType, pluginConfig);
         dorisWriter.initializeLoad(states);
         return dorisWriter;
     }
 
     @Override
-    public Optional<Serializer<SelectDBWriterState>> getWriterStateSerializer() {
-        return Optional.of(new DefaultSerializer<>());
+    public Optional<Serializer<SelectDBSinkState>> getWriterStateSerializer() {
+        return Optional.of(new SelectDBSinkStateSerializer());
     }
 
     @Override
-    public Optional<SinkCommitter<SelectDBCommittable>> createCommitter() throws IOException {
+    public Optional<SinkCommitter<SelectDBCommitInfo>> createCommitter() throws IOException {
         return Optional.of(new SelectDBCommitter(pluginConfig));
     }
 
 
     @Override
-    public Optional<Serializer<SelectDBCommittable>> getCommitInfoSerializer() {
-        return Optional.of(new DefaultSerializer<>());
+    public Optional<Serializer<SelectDBCommitInfo>> getCommitInfoSerializer() {
+        return Optional.of(new SelectDBCommitInfoSerializer());
     }
 
     @Override
-    public Optional<SinkAggregatedCommitter<SelectDBCommittable, SelectDBCommittable>> createAggregatedCommitter() throws IOException {
+    public Optional<SinkAggregatedCommitter<SelectDBCommitInfo, SelectDBCommitInfo>> createAggregatedCommitter() throws IOException {
         return Optional.empty();
     }
 
     @Override
-    public Optional<Serializer<SelectDBCommittable>> getAggregatedCommitInfoSerializer() {
+    public Optional<Serializer<SelectDBCommitInfo>> getAggregatedCommitInfoSerializer() {
         return Optional.empty();
     }
 }

@@ -45,10 +45,10 @@ import java.util.Map;
 import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadStatus.SUCCESS;
 import static org.apache.seatunnel.connector.selectdb.sink.writer.LoadStatus.FAIL;
 
-public class SelectDBCommitter implements SinkCommitter<SelectDBCommittable> {
+public class SelectDBCommitter implements SinkCommitter<SelectDBCommitInfo> {
     private static final Logger LOG = LoggerFactory.getLogger(SelectDBCommitter.class);
     private static final String commitPattern = "http://%s/copy/query";
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final CloseableHttpClient httpClient;
     private final SelectDBConfig selectdbConfig;
     int maxRetry;
@@ -64,18 +64,18 @@ public class SelectDBCommitter implements SinkCommitter<SelectDBCommittable> {
     }
 
     @Override
-    public List<SelectDBCommittable> commit(List<SelectDBCommittable> commitInfos) throws IOException {
-        for (SelectDBCommittable committable : commitInfos) {
+    public List<SelectDBCommitInfo> commit(List<SelectDBCommitInfo> commitInfos) throws IOException {
+        for (SelectDBCommitInfo committable : commitInfos) {
             commitTransaction(committable);
         }
         return Collections.emptyList();
     }
 
     @Override
-    public void abort(List<SelectDBCommittable> commitInfos) throws IOException {
+    public void abort(List<SelectDBCommitInfo> commitInfos) throws IOException {
     }
 
-    private void commitTransaction(SelectDBCommittable committable) throws IOException {
+    private void commitTransaction(SelectDBCommitInfo committable) throws IOException {
         long start = System.currentTimeMillis();
         String hostPort = committable.getHostPort();
         String clusterName = committable.getClusterName();
@@ -89,7 +89,7 @@ public class SelectDBCommitter implements SinkCommitter<SelectDBCommittable> {
         params.put("cluster", clusterName);
         params.put("sql", copySQL);
         boolean success = false;
-        CloseableHttpResponse response = null;
+        CloseableHttpResponse response;
         String loadResult = "";
         while (retry++ <= maxRetry) {
             HttpPostBuilder postBuilder = new HttpPostBuilder();
